@@ -2,6 +2,7 @@ package it.softengunina.userservice.controller;
 
 import it.softengunina.userservice.model.RealEstateAgency;
 import it.softengunina.userservice.repository.RealEstateAgencyRepository;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
@@ -22,7 +23,7 @@ public class RealEstateAgencyController {
     }
 
     @PostMapping
-    public RealEstateAgency createAgency(@RequestBody RealEstateAgency agency) {
+    public RealEstateAgency createAgency(@Valid @RequestBody RealEstateAgency agency) {
         return repository.save(agency);
     }
 
@@ -33,7 +34,7 @@ public class RealEstateAgencyController {
     }
 
     @PutMapping("/{id}")
-    public RealEstateAgency updateAgency(@PathVariable Long id, @RequestBody RealEstateAgency agency) {
+    public RealEstateAgency updateAgency(@PathVariable Long id, @Valid @RequestBody RealEstateAgency agency) {
         return repository.findById(id)
                 .map(existingAgency -> {
                     existingAgency.setName(agency.getName());

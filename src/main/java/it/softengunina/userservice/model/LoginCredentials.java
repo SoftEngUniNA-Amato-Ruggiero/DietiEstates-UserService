@@ -2,13 +2,19 @@ package it.softengunina.userservice.model;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+
 import java.util.Objects;
 
 @Embeddable
 public class LoginCredentials{
+    @NotBlank
+    @Email
     @Column(unique = true, nullable = false)
     private String email;
 
+    @NotBlank
     @Column(unique = true, nullable = false)
     private String cognitoSub;
 

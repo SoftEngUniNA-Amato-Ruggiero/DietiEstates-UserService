@@ -4,6 +4,7 @@ import it.softengunina.userservice.dto.RealEstateAgentDTO;
 import it.softengunina.userservice.model.*;
 import it.softengunina.userservice.repository.RealEstateAgencyRepository;
 import it.softengunina.userservice.repository.RealEstateAgentRepository;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
@@ -29,7 +30,7 @@ public class RealEstateAgentController {
     }
 
     @PostMapping
-    public RealEstateAgent createAgent(@RequestBody RealEstateAgentDTO agent) {
+    public RealEstateAgent createAgent(@Valid  @RequestBody RealEstateAgentDTO agent) {
         RealEstateAgency agency = agencyRepository.findById(agent.getAgencyId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, RealEstateAgencyController.NOT_FOUND_MESSAGE + agent.getAgencyId()));
         RealEstateAgent newAgent = new RealEstateAgent(agent.getCredentials(), agent.getInfo(), agency);
@@ -37,7 +38,7 @@ public class RealEstateAgentController {
     }
 
     @PutMapping("/{id}")
-    public User updateAgent(@PathVariable Long id, @RequestBody RealEstateAgentDTO agent) {
+    public User updateAgent(@PathVariable Long id, @Valid @RequestBody RealEstateAgentDTO agent) {
         if (agent.getAgencyId() == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Agency ID must be provided for agent update.");
         }

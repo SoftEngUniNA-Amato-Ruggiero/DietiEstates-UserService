@@ -1,12 +1,16 @@
 package it.softengunina.userservice.model;
 
 import jakarta.persistence.Embeddable;
+import jakarta.validation.constraints.NotBlank;
+
 import java.util.Objects;
 
 @Embeddable
 public class PersonInfo {
+    @NotBlank
     private String firstName;
 
+    @NotBlank
     private String lastName;
 
     public PersonInfo(String firstName, String lastName) {

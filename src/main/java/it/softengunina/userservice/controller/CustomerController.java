@@ -3,6 +3,7 @@ package it.softengunina.userservice.controller;
 import it.softengunina.userservice.model.Customer;
 import it.softengunina.userservice.model.User;
 import it.softengunina.userservice.repository.CustomerRepository;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
@@ -25,12 +26,12 @@ public class CustomerController {
     }
 
     @PostMapping
-    public Customer createCustomer(@RequestBody Customer customer) {
+    public Customer createCustomer(@Valid @RequestBody Customer customer) {
         return repository.save(customer);
     }
 
     @PutMapping("/{id}")
-    public User updateCustomer(@PathVariable Long id, @RequestBody Customer customer) {
+    public User updateCustomer(@PathVariable Long id, @Valid @RequestBody Customer customer) {
         return repository.findById(id)
                 .map(existingCustomer -> {
                     existingCustomer.setInfo(customer.getInfo());
