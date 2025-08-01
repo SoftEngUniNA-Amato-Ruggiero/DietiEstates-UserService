@@ -1,5 +1,6 @@
 package it.softengunina.userservice.utils;
 
+import it.softengunina.userservice.exceptions.GroupClaimException;
 import it.softengunina.userservice.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,16 +31,11 @@ public class TokenUtils {
     }
 
     // TODO: Refactor this to use a factory pattern
-    public static User getUserFromToken(Jwt jwt) {
-        List<String> groups = jwt.getClaimAsStringList("cognito:groups");
-        if (groups == null || groups.isEmpty()) {
-            throw new RuntimeException("groups claim is empty");
-        }
-
-        PersonInfo info = getInfoFromToken(jwt);
-        LoginCredentials credentials = getCredentialsFromToken(jwt);
-
+    public static User getUserFromToken(Jwt jwt) throws GroupClaimException {
         Role role = getRoleFromToken(jwt);
+        LoginCredentials credentials = getCredentialsFromToken(jwt);
+        PersonInfo info = getInfoFromToken(jwt);
+
         if (role == Role.CUSTOMER) {
             return new Customer(credentials, info);
         }
@@ -53,13 +49,18 @@ public class TokenUtils {
             return new RealEstateManager(credentials, info, agency);
         }
 
-        throw new RuntimeException("Unknown user group: " + groups);
+        throw new RuntimeException("getRoleFromToken did not throw an exception");
     }
 
-    public static Role getRoleFromToken(Jwt jwt) {
+    public static Role getRoleFromToken(Jwt jwt) throws GroupClaimException {
         List<String> groups = jwt.getClaimAsStringList("cognito:groups");
+        return getRoleFromGroups(groups);
+    }
+
+    public static Role getRoleFromGroups(List<String> groups) throws GroupClaimException {
         if (groups == null || groups.isEmpty()) {
-            throw new RuntimeException("groups claim is empty");
+            log.error("groups: {}", groups);
+            throw new GroupClaimException("groups claim is empty");
         }
         if (groups.contains(Role.AGENCY_MANAGER.name())) {
             return Role.AGENCY_MANAGER;
@@ -70,7 +71,7 @@ public class TokenUtils {
         if (groups.contains(Role.CUSTOMER.name())) {
             return Role.CUSTOMER;
         }
-        throw new RuntimeException("Unknown user group: " + groups);
+        throw new GroupClaimException("Unknown user group: " + groups);
     }
 
     public static LoginCredentials getCredentialsFromToken(Jwt jwt) {
