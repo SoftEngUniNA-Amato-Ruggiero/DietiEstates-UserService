@@ -9,6 +9,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 
+import java.util.Optional;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 @DataJpaTest
@@ -34,43 +36,43 @@ class UserRepositoryTest {
 
     @Test
     void testFindByCredentialsWhenUserExists() {
-        User user = userRepository.findByCredentials(credentials);
+        Optional<User> user = userRepository.findByCredentials(credentials);
         assertAll(
-            () -> assertNotNull(user, "User should not be null"),
-            () -> assertEquals(TEST_EMAIL, user.getCredentials().getEmail(), "Email should match"),
-            () -> assertEquals(TEST_COGNITO_SUB, user.getCredentials().getCognitoSub(), "Cognito sub should match"),
-            () -> assertEquals(TEST_FIRST_NAME, user.getInfo().getFirstName(), "First name should match"),
-            () -> assertEquals(TEST_LAST_NAME, user.getInfo().getLastName(), "Last name should match")
+            () -> assertTrue(user.isPresent(), "User should not be null"),
+            () -> assertEquals(TEST_EMAIL, user.get().getCredentials().getEmail(), "Email should match"),
+            () -> assertEquals(TEST_COGNITO_SUB, user.get().getCredentials().getCognitoSub(), "Cognito sub should match"),
+            () -> assertEquals(TEST_FIRST_NAME, user.get().getInfo().getFirstName(), "First name should match"),
+            () -> assertEquals(TEST_LAST_NAME, user.get().getInfo().getLastName(), "Last name should match")
         );
     }
 
     @Test
     void testFindByCredentialsWithNull() {
-        User user = userRepository.findByCredentials(null);
-        assertNull(user, "User should be null");
+        Optional<User> user = userRepository.findByCredentials(null);
+        assertTrue(user.isEmpty(), "User should be null");
     }
 
     @Test
     void testFindByEmailWhenUserExists() {
-        User user = userRepository.findByEmail(TEST_EMAIL);
+        Optional<User> user = userRepository.findByEmail(TEST_EMAIL);
         assertAll(
-            () -> assertNotNull(user, "User should not be null"),
-            () -> assertEquals(TEST_EMAIL, user.getCredentials().getEmail(), "Email should match"),
-            () -> assertEquals(TEST_COGNITO_SUB, user.getCredentials().getCognitoSub(), "Cognito sub should match"),
-            () -> assertEquals(TEST_FIRST_NAME, user.getInfo().getFirstName(), "First name should match"),
-            () -> assertEquals(TEST_LAST_NAME, user.getInfo().getLastName(), "Last name should match")
+            () -> assertTrue(user.isPresent(), "User should not be null"),
+            () -> assertEquals(TEST_EMAIL, user.get().getCredentials().getEmail(), "Email should match"),
+            () -> assertEquals(TEST_COGNITO_SUB, user.get().getCredentials().getCognitoSub(), "Cognito sub should match"),
+            () -> assertEquals(TEST_FIRST_NAME, user.get().getInfo().getFirstName(), "First name should match"),
+            () -> assertEquals(TEST_LAST_NAME, user.get().getInfo().getLastName(), "Last name should match")
         );
     }
 
     @Test
     void testFindByEmailWithEmptyString() {
-        User user = userRepository.findByEmail("");
-        assertNull(user, "User should be null");
+        Optional<User> user = userRepository.findByEmail("");
+        assertTrue(user.isEmpty(), "User should be null");
     }
 
     @Test
     void testFindByEmailWithNull() {
-        User user = userRepository.findByEmail(null);
-        assertNull(user, "User should be null");
+        Optional<User> user = userRepository.findByEmail(null);
+        assertTrue(user.isEmpty(), "User should be null");
     }
 }
