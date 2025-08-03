@@ -1,9 +1,13 @@
 package it.softengunina.userservice.utils;
 
+import it.softengunina.userservice.exceptions.AuthenticationNotFoundException;
 import it.softengunina.userservice.exceptions.GroupClaimException;
+import it.softengunina.userservice.exceptions.JwtNotFoundException;
 import it.softengunina.userservice.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
 
 import java.util.EnumMap;
@@ -23,33 +27,32 @@ public class TokenUtils {
     private TokenUtils() {
     }
 
+    public static Authentication getAuthentication() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null) {
+            throw new AuthenticationNotFoundException("No Authentication found in SecurityContext.");
+        }
+        return authentication;
+    }
+
+    public static Jwt getJwt(Authentication authentication) {
+        if (authentication.getPrincipal() instanceof Jwt jwt) {
+            return jwt;
+        } else {
+            throw new JwtNotFoundException("Authentication object is not an instance of Jwt.");
+        }
+    }
+
+    public static Jwt getJwt() {
+        Authentication authentication = getAuthentication();
+        return getJwt(authentication);
+    }
+
     public static void logTokenData(Jwt jwt) {
         String cognitoSub = jwt.getSubject();
         String username = jwt.getClaimAsString("username");
         log.info("Authenticated user: {} ({})", cognitoSub, username);
         log.info("{}", jwt.getClaims());
-    }
-
-    // TODO: Refactor this to use a factory pattern
-    public static User getUserFromToken(Jwt jwt) throws GroupClaimException {
-        Role role = getRoleFromToken(jwt);
-        LoginCredentials credentials = getCredentialsFromToken(jwt);
-        PersonInfo info = getInfoFromToken(jwt);
-
-        if (role == Role.CUSTOMER) {
-            return new Customer(credentials, info);
-        }
-
-        RealEstateAgency agency = getAgencyFromToken(jwt);
-
-        if (role == Role.REAL_ESTATE_AGENT) {
-            return new RealEstateAgent(credentials, info, agency);
-        }
-        if (role == Role.AGENCY_MANAGER) {
-            return new RealEstateManager(credentials, info, agency);
-        }
-
-        throw new RuntimeException("getRoleFromToken did not throw an exception");
     }
 
     public static Role getRoleFromToken(Jwt jwt) throws GroupClaimException {
@@ -74,6 +77,16 @@ public class TokenUtils {
         throw new GroupClaimException("Unknown user group: " + groups);
     }
 
+    public static String getCognitoSubFromToken(Jwt jwt) {
+        String cognitoSub = jwt.getSubject();
+        if (cognitoSub == null || cognitoSub.isEmpty()) {
+            throw new JwtNotFoundException("Cognito sub claim is missing or empty.");
+        }
+        return cognitoSub;
+    }
+
+    // The following methods only work with the ID Token, not the Access Token.
+
     public static LoginCredentials getCredentialsFromToken(Jwt jwt) {
         return new LoginCredentials(
                 jwt.getClaimAsString("email"),
@@ -86,10 +99,5 @@ public class TokenUtils {
                 jwt.getClaimAsString("given_name"),
                 jwt.getClaimAsString("family_name")
         );
-    }
-
-    //TODO: Implement this method to extract the agency information from the JWT token.
-    public static RealEstateAgency getAgencyFromToken(Jwt jwt) {
-        return new RealEstateAgency("iban", "name");
     }
 }
