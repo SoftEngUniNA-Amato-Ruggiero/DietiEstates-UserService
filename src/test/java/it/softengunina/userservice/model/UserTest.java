@@ -5,19 +5,18 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 
-class RealEstateManagerTest {
-    RealEstateManager realEstateManager;
+class UserTest {
+    User user;
 
     @BeforeEach
-    void createRealEstateAgent() {
+    void createCustomer() {
         LoginCredentials loginCredentials = new LoginCredentials("johndoe@example.com", "password123");
         PersonInfo personInfo = new PersonInfo("John", "Doe");
-        RealEstateAgency realEstateAgency = new RealEstateAgency("Test Agency", "3331234567890");
-        realEstateManager = new RealEstateManager(loginCredentials, personInfo, realEstateAgency);
+        user = new User(loginCredentials, personInfo);
     }
 
     @Test
     void verifyPermissions() {
-//        assertEquals(Role.AGENCY_MANAGER, realEstateManager.getPermissions());
+//        assertEquals(Role.CUSTOMER, user.getPermissions());
     }
 }

@@ -1,6 +1,5 @@
 package it.softengunina.userservice.repository;
 
-import it.softengunina.userservice.model.Customer;
 import it.softengunina.userservice.model.LoginCredentials;
 import it.softengunina.userservice.model.PersonInfo;
 import it.softengunina.userservice.model.User;
@@ -24,14 +23,11 @@ class UserRepositoryTest {
     private final LoginCredentials credentials = new LoginCredentials(TEST_EMAIL, TEST_COGNITO_SUB);
 
     @Autowired
-    private UserRepository<User> userRepository;
-
-    @Autowired
-    private CustomerRepository customerRepository;
+    private UserRepository userRepository;
 
     @BeforeEach
     void setUp() {
-        customerRepository.save(new Customer(credentials, info));
+        userRepository.save(new User(credentials, info));
     }
 
     @Test

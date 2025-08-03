@@ -1,39 +1,38 @@
 package it.softengunina.userservice.model;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
+import lombok.*;
 
 @Entity
 @Table(name = "real_estate_agents")
-public class RealEstateAgent extends User{
-    private static final Role ROLE = Role.REAL_ESTATE_AGENT;
-
-    @ManyToOne
+@PrimaryKeyJoinColumn(name = "id")
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PROTECTED)
+@EqualsAndHashCode(callSuper = true)
+@ToString
+public class RealEstateAgent extends User {
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "agency_id")
+    @NotNull
+    @Getter
+    @Setter
+    @NonNull
     protected RealEstateAgency agency;
 
-    public RealEstateAgent(LoginCredentials credentials, PersonInfo info, RealEstateAgency agency) {
+    public RealEstateAgent(@NonNull LoginCredentials credentials,
+                           @NonNull PersonInfo info,
+                           @NonNull RealEstateAgency agency) {
         super(credentials, info);
         this.agency = agency;
     }
 
-    protected RealEstateAgent(){
-        super();
-    }
-
-    @Override
-    public Role getPermissions(){
-        return ROLE;
-    }
-
-    public RealEstateAgency getAgency() {
-        return agency;
-    }
-
-    @Override
-    public String toString(){
-        return super.toString() + " " + agency.toString();
-    }
-
-    protected void setAgency(RealEstateAgency agency) {
-        this.agency = agency;
+    public static RealEstateAgent promoteUser(User user, RealEstateAgency agency) {
+        RealEstateAgent agent = new RealEstateAgent();
+        agent.id = user.getId();
+        agent.version = user.getVersion();
+        agent.credentials = user.getCredentials();
+        agent.info = user.getInfo();
+        agent.agency = agency;
+        return agent;
     }
 }

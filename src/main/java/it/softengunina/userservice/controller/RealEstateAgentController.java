@@ -4,6 +4,7 @@ import it.softengunina.userservice.dto.RealEstateAgentDTO;
 import it.softengunina.userservice.model.*;
 import it.softengunina.userservice.repository.RealEstateAgencyRepository;
 import it.softengunina.userservice.repository.RealEstateAgentRepository;
+import it.softengunina.userservice.repository.UserRepository;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -16,10 +17,12 @@ import java.util.List;
 public class RealEstateAgentController {
 
     private static final String NOT_FOUND_MESSAGE = "Agent not found with id ";
+    private final UserRepository userRepository;
     private final RealEstateAgentRepository agentRepository;
     private final RealEstateAgencyRepository agencyRepository;
 
-    public RealEstateAgentController(RealEstateAgentRepository agentRepository, RealEstateAgencyRepository agencyRepository) {
+    public RealEstateAgentController(UserRepository userRepository, RealEstateAgentRepository agentRepository, RealEstateAgencyRepository agencyRepository) {
+        this.userRepository = userRepository;
         this.agentRepository = agentRepository;
         this.agencyRepository = agencyRepository;
     }
@@ -30,11 +33,15 @@ public class RealEstateAgentController {
     }
 
     @PostMapping
-    public RealEstateAgent createAgent(@Valid  @RequestBody RealEstateAgentDTO agent) {
+    public RealEstateAgent createAgentFromExistingUser(@Valid  @RequestBody RealEstateAgentDTO agent) {
         RealEstateAgency agency = agencyRepository.findById(agent.getAgencyId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, RealEstateAgencyController.NOT_FOUND_MESSAGE + agent.getAgencyId()));
-        RealEstateAgent newAgent = new RealEstateAgent(agent.getCredentials(), agent.getInfo(), agency);
-        return agentRepository.save(newAgent);
+
+        User user = userRepository.findByEmail(agent.getCredentials().getEmail())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found with email: " + agent.getCredentials().getEmail()));
+
+        //TODO: promote user to agent, then save it
+        return agentRepository.save(new RealEstateAgent(user.getCredentials(), user.getInfo(), agency));
     }
 
     @PutMapping("/{id}")

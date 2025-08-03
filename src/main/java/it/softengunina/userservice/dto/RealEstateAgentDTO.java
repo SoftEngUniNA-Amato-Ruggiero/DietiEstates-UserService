@@ -6,6 +6,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
+@AllArgsConstructor
 @Getter
 @Setter
 public class RealEstateAgentDTO {

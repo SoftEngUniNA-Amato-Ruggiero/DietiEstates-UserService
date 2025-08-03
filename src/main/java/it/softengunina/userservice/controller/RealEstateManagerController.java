@@ -30,26 +30,4 @@ public class RealEstateManagerController {
     public List<RealEstateManager> getAllManagers() {
         return repository.findAll();
     }
-
-    @PostMapping
-    public RealEstateAgent createManager(@Valid @RequestBody RealEstateAgentDTO agent) {
-        RealEstateAgency agency = agencyRepository.findById(agent.getAgencyId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, RealEstateAgencyController.NOT_FOUND_MESSAGE + agent.getAgencyId()));
-        RealEstateManager newManager = new RealEstateManager(agent.getCredentials(), agent.getInfo(), agency);
-        return repository.save(newManager);
-    }
-
-    @PutMapping("/{id}")
-    public User updateManager(@PathVariable Long id, @Valid @RequestBody RealEstateAgentDTO agent) {
-        if (agent.getAgencyId() == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Agency ID must be provided for agent update.");
-        }
-        return repository.findById(id)
-                .map(existingManager -> {
-                    existingManager.setInfo(agent.getInfo());
-                    existingManager.setCredentials(agent.getCredentials());
-                    return repository.save(existingManager);
-                })
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, NOT_FOUND_MESSAGE + id));
-    }
 }

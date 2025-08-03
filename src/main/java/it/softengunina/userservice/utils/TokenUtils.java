@@ -17,13 +17,6 @@ import java.util.Map;
 public class TokenUtils {
     private static final Logger log = LoggerFactory.getLogger(TokenUtils.class);
 
-    private static final Map<Role, String> roleAuthorityMap = new EnumMap<>(Role.class);
-    static {
-        for (Role role : Role.values()) {
-            roleAuthorityMap.put(role, "ROLE_" + role.name().toUpperCase());
-        }
-    }
-
     private TokenUtils() {
     }
 
@@ -55,27 +48,27 @@ public class TokenUtils {
         log.info("{}", jwt.getClaims());
     }
 
-    public static Role getRoleFromToken(Jwt jwt) throws GroupClaimException {
-        List<String> groups = jwt.getClaimAsStringList("cognito:groups");
-        return getRoleFromGroups(groups);
-    }
-
-    public static Role getRoleFromGroups(List<String> groups) throws GroupClaimException {
-        if (groups == null || groups.isEmpty()) {
-            log.error("groups: {}", groups);
-            throw new GroupClaimException("groups claim is empty");
-        }
-        if (groups.contains(Role.AGENCY_MANAGER.name())) {
-            return Role.AGENCY_MANAGER;
-        }
-        if (groups.contains(Role.REAL_ESTATE_AGENT.name())) {
-            return Role.REAL_ESTATE_AGENT;
-        }
-        if (groups.contains(Role.CUSTOMER.name())) {
-            return Role.CUSTOMER;
-        }
-        throw new GroupClaimException("Unknown user group: " + groups);
-    }
+//    public static Role getRoleFromToken(Jwt jwt) throws GroupClaimException {
+//        List<String> groups = jwt.getClaimAsStringList("cognito:groups");
+//        return getRoleFromGroups(groups);
+//    }
+//
+//    public static Role getRoleFromGroups(List<String> groups) throws GroupClaimException {
+//        if (groups == null || groups.isEmpty()) {
+//            log.error("groups: {}", groups);
+//            throw new GroupClaimException("groups claim is empty");
+//        }
+//        if (groups.contains(Role.AGENCY_MANAGER.name())) {
+//            return Role.AGENCY_MANAGER;
+//        }
+//        if (groups.contains(Role.REAL_ESTATE_AGENT.name())) {
+//            return Role.REAL_ESTATE_AGENT;
+//        }
+//        if (groups.contains(Role.CUSTOMER.name())) {
+//            return Role.CUSTOMER;
+//        }
+//        throw new GroupClaimException("Unknown user group: " + groups);
+//    }
 
     public static String getCognitoSubFromToken(Jwt jwt) {
         String cognitoSub = jwt.getSubject();

@@ -1,48 +1,45 @@
 package it.softengunina.userservice.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
+import lombok.*;
 
 @Entity
 @Table(name = "users")
 @Inheritance(strategy = InheritanceType.JOINED)
-public abstract class User {
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PROTECTED)
+@EqualsAndHashCode
+@ToString
+public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
+    @Getter
+    @Setter(AccessLevel.PROTECTED)
     Long id;
 
+    @Version
+    @Getter
+    @Setter(AccessLevel.PROTECTED)
+    Long version;
+
     @Embedded
+    @NotNull
+    @Getter
+    @Setter
+    @NonNull
     LoginCredentials credentials;
 
     @Embedded
+    @NotNull
+    @Getter
+    @Setter
+    @NonNull
     PersonInfo info;
 
-    protected User(LoginCredentials credentials, PersonInfo info) {
+    public User(@NonNull LoginCredentials credentials,
+                @NonNull PersonInfo info) {
         this.credentials = credentials;
-        this.info = info;
-    }
-
-    protected User(){}
-
-    public LoginCredentials getCredentials(){
-        return credentials;
-    }
-
-    public PersonInfo getInfo() {
-        return info;
-    }
-
-    public abstract Role getPermissions();
-
-    @Override
-    public String toString() {
-        return info.toString() + " " + credentials.toString();
-    }
-
-    public void setCredentials(LoginCredentials credentials) {
-        this.credentials = credentials;
-    }
-
-    public void setInfo(PersonInfo info) {
         this.info = info;
     }
 }
