@@ -2,33 +2,21 @@ package it.softengunina.userservice.dto;
 
 import it.softengunina.userservice.model.LoginCredentials;
 import it.softengunina.userservice.model.PersonInfo;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
+import lombok.*;
 
+@Getter
+@Setter
 public class RealEstateAgentDTO {
+    @NotNull
+    @Valid
     private LoginCredentials credentials;
+
+    @NotNull
+    @Valid
     private PersonInfo info;
+
+    @NotNull
     private Long agencyId;
-
-    public LoginCredentials getCredentials() {
-        return credentials;
-    }
-
-    public PersonInfo getInfo() {
-        return info;
-    }
-
-    public Long getAgencyId() {
-        return agencyId;
-    }
-
-    public void setCredentials(LoginCredentials credentials) {
-        this.credentials = credentials;
-    }
-
-    public void setInfo(PersonInfo info) {
-        this.info = info;
-    }
-
-    public void setAgencyId(Long agencyId) {
-        this.agencyId = agencyId;
-    }
 }
