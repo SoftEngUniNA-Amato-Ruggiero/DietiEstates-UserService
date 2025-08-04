@@ -29,5 +29,10 @@ public class RealEstateManager extends RealEstateAgent {
         manager.setAgency(agent.getAgency());
         return manager;
     }
+
+    @Override
+    public Role getRole() {
+        return Role.AGENCY_MANAGER;
+    }
 }
 

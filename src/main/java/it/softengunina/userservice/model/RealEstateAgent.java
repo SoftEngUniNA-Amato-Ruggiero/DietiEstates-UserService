@@ -37,4 +37,9 @@ public class RealEstateAgent extends User {
         agent.setAgency(agency);
         return agent;
     }
+
+    @Override
+    public Role getRole() {
+        return Role.REAL_ESTATE_AGENT;
+    }
 }

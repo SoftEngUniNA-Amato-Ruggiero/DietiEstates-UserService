@@ -1,20 +1,21 @@
 package it.softengunina.userservice.controller;
 
-import it.softengunina.userservice.dto.UserRequest;
-import it.softengunina.userservice.model.LoginCredentials;
-import it.softengunina.userservice.model.PersonInfo;
-import it.softengunina.userservice.model.User;
+import it.softengunina.userservice.dto.UserDTO;
+import it.softengunina.userservice.dto.UserAndRoleDTO;
+import it.softengunina.userservice.model.*;
 import it.softengunina.userservice.repository.UserRepository;
 import it.softengunina.userservice.utils.TokenUtils;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
+@Slf4j
 @RestController
 @RequestMapping("/users")
 public class UsersController {
@@ -39,19 +40,26 @@ public class UsersController {
 
     @PostMapping("/self")
     @Transactional
-    public User postSelf(@Valid @RequestBody UserRequest self) {
+    public UserAndRoleDTO postSelf(@Valid @RequestBody UserDTO self) {
         Jwt jwt = TokenUtils.getJwt();
         String cognitoSub = TokenUtils.getCognitoSubFromToken(jwt);
 
         LoginCredentials credentials = new LoginCredentials(self.getEmail(), cognitoSub);
         PersonInfo info = self.getInfo();
-        User user = new User(credentials, info);
-        return repository.save(user);
+        User user;
+        try {
+            user = repository.findByCognitoSub(cognitoSub)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, NOT_FOUND_MESSAGE));
+        } catch (ResponseStatusException e) {
+            user = repository.save(new User(credentials, info));
+        }
+
+        return new UserAndRoleDTO(new UserDTO(user.getCredentials().getEmail(), user.getInfo()), user.getRole().name());
     }
 
     @PutMapping("/self")
     @Transactional
-    public User updateSelf(@Valid @RequestBody UserRequest user) {
+    public User updateSelf(@Valid @RequestBody UserDTO user) {
         Jwt jwt = TokenUtils.getJwt();
         String cognitoSub = TokenUtils.getCognitoSubFromToken(jwt);
 

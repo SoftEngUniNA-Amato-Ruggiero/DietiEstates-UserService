@@ -9,7 +9,7 @@ import lombok.*;
 @AllArgsConstructor
 @Getter
 @Setter
-public class UserRequest {
+public class UserDTO {
     @NotBlank
     private String email;
 

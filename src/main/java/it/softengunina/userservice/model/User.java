@@ -42,4 +42,8 @@ public class User {
         this.credentials = credentials;
         this.info = info;
     }
+
+    public Role getRole() {
+        return Role.CUSTOMER;
+    }
 }

@@ -1,11 +1,9 @@
 package it.softengunina.userservice.controller;
 
 import it.softengunina.userservice.dto.RealEstateAgencyRequest;
+import it.softengunina.userservice.dto.RealEstateAgencyPostResponse;
 import it.softengunina.userservice.dto.RealEstateAgentDTO;
-import it.softengunina.userservice.model.RealEstateAgency;
-import it.softengunina.userservice.model.RealEstateAgent;
-import it.softengunina.userservice.model.RealEstateManager;
-import it.softengunina.userservice.model.User;
+import it.softengunina.userservice.model.*;
 import it.softengunina.userservice.repository.RealEstateAgencyRepository;
 import it.softengunina.userservice.repository.RealEstateAgentRepository;
 import it.softengunina.userservice.repository.RealEstateManagerRepository;
@@ -51,7 +49,7 @@ public class RealEstateAgencyController {
 
     @PostMapping
     @Transactional
-    public RealEstateAgency createAgency(@Valid @RequestBody RealEstateAgencyRequest agencyRequest) {
+    public RealEstateAgencyPostResponse createAgency(@Valid @RequestBody RealEstateAgencyRequest agencyRequest) {
         RealEstateAgency agency = new RealEstateAgency(agencyRequest.getIban(), agencyRequest.getName());
         RealEstateAgency savedAgency = agencyRepository.save(agency);
 
@@ -68,7 +66,7 @@ public class RealEstateAgencyController {
         agentRepository.promoteUser(user.getId(), savedAgency.getId());
         managerRepository.promoteAgent(user.getId());
 
-        return savedAgency;
+        return new RealEstateAgencyPostResponse(savedAgency, Role.AGENCY_MANAGER.name());
     }
 
     @GetMapping("/{id}")

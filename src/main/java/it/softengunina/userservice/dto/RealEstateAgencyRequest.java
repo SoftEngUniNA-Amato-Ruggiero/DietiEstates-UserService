@@ -8,8 +8,8 @@ import lombok.*;
 @Setter
 public class RealEstateAgencyRequest {
     @NotBlank
-    String iban;
+    private String iban;
 
     @NotBlank
-    String name;
+    private String name;
 }
