@@ -55,25 +55,17 @@ public class RealEstateAgencyController {
         String cognitoSub = getCognitoSubFromToken(jwt);
         User user = userRepository.findByCognitoSub(cognitoSub)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found with cognito sub: " + cognitoSub));
-        Long userId = user.getId();
+        log.info("user version: {}", user.getVersion());
 
-//        TODO: The commented lines are the proper way to save entities, but they cause the following exception:
+//        TODO: managerRepository.save(manager) is the proper way to save entities, but it causes the following exception:
 //         org.hibernate.StaleObjectStateException:
 //         Row was updated or deleted by another transaction (or unsaved-value mapping was incorrect):
-        RealEstateAgent agent = RealEstateAgent.promoteUser(user, savedAgency);
-        savedAgency.getAgents().add(agent);
-//        agentRepository.save(agent);
-        agentRepository.promoteUser(user.getId(), savedAgency.getId());
-
-        RealEstateManager manager = RealEstateManager.promoteAgent(agent);
+        RealEstateManager manager = RealEstateManager.promoteUser(user, savedAgency);
+        log.info("manager version: {}", manager.getVersion());
+        savedAgency.getAgents().add(manager);
         savedAgency.getManagers().add(manager);
-//        managerRepository.save(manager);
+        agentRepository.promoteUser(user.getId(), savedAgency.getId());
         managerRepository.promoteAgent(user.getId());
-
-        Long managerId = manager.getId();
-        if (!userId.equals(managerId)) {
-            log.error("User ID does not match the promoted manager ID.");
-        }
 
         return savedAgency;
     }
