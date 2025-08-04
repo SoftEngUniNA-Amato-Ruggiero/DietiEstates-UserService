@@ -1,9 +1,11 @@
 package it.softengunina.userservice.model;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -37,14 +39,16 @@ public class RealEstateAgency{
     private String name;
 
     @OneToMany(mappedBy = "agency")
+    @JsonManagedReference
     @Getter
     @Setter(AccessLevel.PROTECTED)
-    private List<RealEstateManager> managers;
+    private List<RealEstateManager> managers = new ArrayList<>();
 
     @OneToMany(mappedBy = "agency")
+    @JsonManagedReference
     @Getter
     @Setter(AccessLevel.PROTECTED)
-    private List<RealEstateAgent> agents;
+    private List<RealEstateAgent> agents = new ArrayList<>();
 
     public RealEstateAgency(@NonNull String iban,
                             @NonNull String name) {

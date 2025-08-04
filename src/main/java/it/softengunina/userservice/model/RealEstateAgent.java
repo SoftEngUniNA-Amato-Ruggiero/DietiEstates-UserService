@@ -1,4 +1,5 @@
 package it.softengunina.userservice.model;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
@@ -13,6 +14,7 @@ import lombok.*;
 public class RealEstateAgent extends User {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "agency_id")
+    @JsonBackReference
     @NotNull
     @Getter
     @Setter
