@@ -1,6 +1,5 @@
 package it.softengunina.userservice.dto;
 
-import it.softengunina.userservice.model.LoginCredentials;
 import it.softengunina.userservice.model.PersonInfo;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;

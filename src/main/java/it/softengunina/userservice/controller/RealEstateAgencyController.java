@@ -1,7 +1,7 @@
 package it.softengunina.userservice.controller;
 
 import it.softengunina.userservice.dto.RealEstateAgencyRequest;
-import it.softengunina.userservice.dto.RealEstateAgencyResponse;
+import it.softengunina.userservice.dto.RealEstateAgentDTO;
 import it.softengunina.userservice.model.RealEstateAgency;
 import it.softengunina.userservice.model.RealEstateAgent;
 import it.softengunina.userservice.model.RealEstateManager;
@@ -28,38 +28,39 @@ import static it.softengunina.userservice.utils.TokenUtils.*;
 public class RealEstateAgencyController {
     static final String NOT_FOUND_MESSAGE = "Agency not found with id ";
 
+    private final RealEstateAgencyRepository agencyRepository;
     private final UserRepository<User> userRepository;
-    private final RealEstateAgentRepository agentRepository;
+    private final RealEstateAgentRepository<RealEstateAgent> agentRepository;
     private final RealEstateManagerRepository managerRepository;
-    private final RealEstateAgencyRepository repository;
 
-    public RealEstateAgencyController(UserRepository<User> userRepository, RealEstateManagerRepository managerRepository, RealEstateAgencyRepository repository, RealEstateAgentRepository agentRepository) {
+    public RealEstateAgencyController(RealEstateAgencyRepository agencyRepository,
+                                      UserRepository<User> userRepository,
+                                      RealEstateAgentRepository<RealEstateAgent> agentRepository,
+                                      RealEstateManagerRepository managerRepository) {
+        this.agencyRepository = agencyRepository;
         this.userRepository = userRepository;
         this.agentRepository = agentRepository;
         this.managerRepository = managerRepository;
-        this.repository = repository;
     }
 
     @GetMapping
+    @Transactional(readOnly = true)
     public List<RealEstateAgency> getAllAgencies() {
-        return repository.findAll();
+        return agencyRepository.findAll();
     }
 
     @PostMapping
     @Transactional
     public RealEstateAgency createAgency(@Valid @RequestBody RealEstateAgencyRequest agencyRequest) {
         RealEstateAgency agency = new RealEstateAgency(agencyRequest.getIban(), agencyRequest.getName());
-        RealEstateAgency savedAgency = repository.save(agency);
+        RealEstateAgency savedAgency = agencyRepository.save(agency);
 
-        Jwt jwt = getJwt();
-        String cognitoSub = getCognitoSubFromToken(jwt);
-        User user = userRepository.findByCognitoSub(cognitoSub)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found with cognito sub: " + cognitoSub));
+        User user = getUserFromJwt();
         log.info("user version: {}", user.getVersion());
 
-//        TODO: managerRepository.save(manager) is the proper way to save entities, but it causes the following exception:
-//         org.hibernate.StaleObjectStateException:
-//         Row was updated or deleted by another transaction (or unsaved-value mapping was incorrect):
+//        TODO: "managerRepository.save(manager)" is the proper way to save entities, but it causes the exception:
+//         "org.hibernate.StaleObjectStateException:
+//         Row was updated or deleted by another transaction (or unsaved-value mapping was incorrect)"
         RealEstateManager manager = RealEstateManager.promoteUser(user, savedAgency);
         log.info("manager version: {}", manager.getVersion());
         savedAgency.getAgents().add(manager);
@@ -71,26 +72,89 @@ public class RealEstateAgencyController {
     }
 
     @GetMapping("/{id}")
+    @Transactional(readOnly = true)
     public RealEstateAgency getAgencyById(@PathVariable Long id) {
-        return repository.findById(id)
+        return agencyRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, NOT_FOUND_MESSAGE + id));
     }
 
     @PutMapping("/{id}")
-    public RealEstateAgency updateAgency(@PathVariable Long id, @Valid @RequestBody RealEstateAgency agency) {
-        return repository.findById(id)
-                .map(existingAgency -> {
-                    existingAgency.setName(agency.getName());
-                    return repository.save(existingAgency);
-                })
+    @Transactional
+    public RealEstateAgency updateAgency(@PathVariable Long id, @Valid @RequestBody RealEstateAgencyRequest agency) {
+        RealEstateManager manager = getRealEstateManagerFromJwt();
+
+        RealEstateAgency savedAgency = agencyRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, NOT_FOUND_MESSAGE + id));
+
+        if (!manager.getAgency().equals(savedAgency)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You do not have permission to update this agency");
+        }
+
+        savedAgency.setName(agency.getName());
+        return agencyRepository.save(savedAgency);
     }
 
     @DeleteMapping("/{id}")
+    @Transactional
     public void deleteAgency(@PathVariable Long id) {
-        if (!repository.existsById(id)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, NOT_FOUND_MESSAGE + id);
+        RealEstateManager manager = getRealEstateManagerFromJwt();
+
+        RealEstateAgency savedAgency = agencyRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, NOT_FOUND_MESSAGE + id));
+
+        if (!manager.getAgency().equals(savedAgency)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You do not have permission to delete this agency");
         }
-        repository.deleteById(id);
+
+        agencyRepository.delete(savedAgency);
+    }
+
+    @GetMapping("/{id}/agents")
+    public List<RealEstateAgent> getAgents(@PathVariable Long id) {
+        RealEstateAgency agency = agencyRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, NOT_FOUND_MESSAGE + id));
+        return agentRepository.findByAgencyId(agency.getId());
+    }
+
+    @PostMapping("/{id}/agents")
+    @Transactional
+    public RealEstateAgent addAgent(@PathVariable Long id, @Valid @RequestBody RealEstateAgentDTO agentDto) {
+        RealEstateAgency agency = agencyRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, NOT_FOUND_MESSAGE + id));
+        RealEstateManager manager = getRealEstateManagerFromJwt();
+        if (!manager.getAgency().equals(agency)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You do not have permission to add agents to this agency");
+        }
+
+        User user = userRepository.findByEmail(agentDto.getEmail())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, NOT_FOUND_MESSAGE + agentDto.getEmail()));
+        agentRepository.promoteUser(user.getId(), id);
+
+        return agentRepository.findById(user.getId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Agent not found with id: " + user.getId()));
+    }
+
+    @GetMapping("/{id}/managers")
+    public List<RealEstateManager> getManagers(@PathVariable Long id) {
+        RealEstateAgency agency = agencyRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, NOT_FOUND_MESSAGE + id));
+        return managerRepository.findByAgencyId(agency.getId());
+    }
+
+
+    //TODO: Move somewhere that makes sense
+
+    private User getUserFromJwt() {
+        Jwt jwt = getJwt();
+        String cognitoSub = getCognitoSubFromToken(jwt);
+        return userRepository.findByCognitoSub(cognitoSub)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found with cognito sub: " + cognitoSub));
+    }
+
+    private RealEstateManager getRealEstateManagerFromJwt() {
+        Jwt jwt = getJwt();
+        String cognitoSub = getCognitoSubFromToken(jwt);
+        return managerRepository.findByCognitoSub(cognitoSub)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Manager not found with cognito sub: " + cognitoSub));
     }
 }
