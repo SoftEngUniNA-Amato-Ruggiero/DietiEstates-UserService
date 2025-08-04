@@ -16,9 +16,9 @@ import java.util.Optional;
 public class UsersController {
     private static final String NOT_FOUND_MESSAGE = "User not found with id ";
     private static final String EMAIL_NOT_FOUND_MESSAGE = "User not found with email ";
-    private final UserRepository repository;
+    private final UserRepository<User> repository;
 
-    public UsersController(UserRepository repository) {
+    public UsersController(UserRepository<User> repository) {
         this.repository = repository;
     }
 

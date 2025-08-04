@@ -23,7 +23,7 @@ class UserRepositoryTest {
     private final LoginCredentials credentials = new LoginCredentials(TEST_EMAIL, TEST_COGNITO_SUB);
 
     @Autowired
-    private UserRepository userRepository;
+    private UserRepository<User> userRepository;
 
     @BeforeEach
     void setUp() {

@@ -6,8 +6,8 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-public interface RealEstateAgentRepository  extends JpaRepository<RealEstateAgent, Long> {
+public interface RealEstateAgentRepository  extends UserRepository<RealEstateAgent> {
     @Modifying
-    @Query(value = "INSERT INTO real_estate_agents (id, agency_id) VALUES (:userId, :agencyId)", nativeQuery = true)
+    @Query(value = "INSERT INTO  real_estate_agents  (id, agency_id) VALUES (:userId, :agencyId)", nativeQuery = true)
     void promoteUser(@Param("userId") Long userId, @Param("agencyId") Long agencyId);
 }

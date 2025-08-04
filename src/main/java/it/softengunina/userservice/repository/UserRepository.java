@@ -7,12 +7,12 @@ import org.springframework.data.jpa.repository.Query;
 
 import java.util.Optional;
 
-public interface UserRepository extends JpaRepository<User,Long> {
-    Optional<User> findByCredentials(LoginCredentials credentials);
+public interface UserRepository<T extends User> extends JpaRepository<T,Long> {
+    Optional<T> findByCredentials(LoginCredentials credentials);
 
     @Query("SELECT u FROM #{#entityName} u WHERE u.credentials.email = :email")
-    Optional<User> findByEmail(String email);
+    Optional<T> findByEmail(String email);
 
     @Query("SELECT u FROM #{#entityName} u WHERE u.credentials.cognitoSub = :cognitoSub")
-    Optional<User> findByCognitoSub(String cognitoSub);
+    Optional<T> findByCognitoSub(String cognitoSub);
 }

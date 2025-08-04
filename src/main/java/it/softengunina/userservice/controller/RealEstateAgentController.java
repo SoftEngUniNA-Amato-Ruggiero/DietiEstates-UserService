@@ -17,11 +17,11 @@ import java.util.List;
 public class RealEstateAgentController {
 
     private static final String NOT_FOUND_MESSAGE = "Agent not found with id ";
-    private final UserRepository userRepository;
+    private final UserRepository<User> userRepository;
     private final RealEstateAgentRepository agentRepository;
     private final RealEstateAgencyRepository agencyRepository;
 
-    public RealEstateAgentController(UserRepository userRepository, RealEstateAgentRepository agentRepository, RealEstateAgencyRepository agencyRepository) {
+    public RealEstateAgentController(UserRepository<User> userRepository, RealEstateAgentRepository agentRepository, RealEstateAgencyRepository agencyRepository) {
         this.userRepository = userRepository;
         this.agentRepository = agentRepository;
         this.agencyRepository = agencyRepository;
