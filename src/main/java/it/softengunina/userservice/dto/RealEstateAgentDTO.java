@@ -12,7 +12,7 @@ import lombok.*;
 public class RealEstateAgentDTO {
     @NotNull
     @Valid
-    private LoginCredentials credentials;
+    private String email;
 
     @NotNull
     @Valid
