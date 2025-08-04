@@ -30,11 +30,11 @@ public class RealEstateAgent extends User {
 
     public static RealEstateAgent promoteUser(User user, RealEstateAgency agency) {
         RealEstateAgent agent = new RealEstateAgent();
-        agent.id = user.getId();
-        agent.version = user.getVersion();
-        agent.credentials = user.getCredentials();
-        agent.info = user.getInfo();
-        agent.agency = agency;
+        agent.setId(user.getId());
+        agent.setVersion(user.getVersion());
+        agent.setCredentials(user.getCredentials());
+        agent.setInfo(user.getInfo());
+        agent.setAgency(agency);
         return agent;
     }
 }

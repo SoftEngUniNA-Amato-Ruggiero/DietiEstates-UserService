@@ -16,26 +16,26 @@ public class User {
     @GeneratedValue(strategy = GenerationType.AUTO)
     @Getter
     @Setter(AccessLevel.PROTECTED)
-    Long id;
+    private Long id;
 
     @Version
     @Getter
     @Setter(AccessLevel.PROTECTED)
-    Long version;
+    private Long version;
 
     @Embedded
     @NotNull
     @Getter
     @Setter
     @NonNull
-    LoginCredentials credentials;
+    private LoginCredentials credentials;
 
     @Embedded
     @NotNull
     @Getter
     @Setter
     @NonNull
-    PersonInfo info;
+    private PersonInfo info;
 
     public User(@NonNull LoginCredentials credentials,
                 @NonNull PersonInfo info) {
