@@ -75,9 +75,7 @@ public class RealEstateAgency{
     }
 
     public void removeAgent(@NonNull RealEstateAgent agent) {
-        if (managers.contains(agent)) {
-            throw new IllegalArgumentException("Cannot remove a manager as an agent");
-        }
+        managers.remove(agent);
         agents.remove(agent);
         agent.setAgency(null);
     }
