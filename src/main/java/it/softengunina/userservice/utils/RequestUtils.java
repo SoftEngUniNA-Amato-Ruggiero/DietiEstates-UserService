@@ -1,14 +1,13 @@
 package it.softengunina.userservice.utils;
 
 import jakarta.servlet.http.HttpServletRequest;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class RequestUtils {
-    private static final Logger log = LoggerFactory.getLogger(RequestUtils.class);
-
-    private RequestUtils() { }
-
     public static void printAuthorizationHeader(HttpServletRequest request) {
         String authHeader = request.getHeader("Authorization");
         if (authHeader != null) {
