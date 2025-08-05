@@ -5,8 +5,9 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "real_estate_agencies")
@@ -23,6 +24,8 @@ public class RealEstateAgency{
     @Version
     @Getter
     @Setter(AccessLevel.PROTECTED)
+    @EqualsAndHashCode.Exclude
+    @ToString.Exclude
     private Long version;
 
     @NotBlank
@@ -40,20 +43,52 @@ public class RealEstateAgency{
 
     @OneToMany(mappedBy = "agency")
     @JsonManagedReference
-    @Getter
     @Setter(AccessLevel.PROTECTED)
-    private List<RealEstateManager> managers = new ArrayList<>();
+    @EqualsAndHashCode.Exclude
+    @ToString.Exclude
+    private Set<RealEstateManager> managers = new HashSet<>();
 
     @OneToMany(mappedBy = "agency")
     @JsonManagedReference
-    @Getter
     @Setter(AccessLevel.PROTECTED)
-    private List<RealEstateAgent> agents = new ArrayList<>();
+    @EqualsAndHashCode.Exclude
+    @ToString.Exclude
+    private Set<RealEstateAgent> agents = new HashSet<>();
 
     public RealEstateAgency(@NonNull String iban,
                             @NonNull String name) {
         this.iban = iban;
         this.name = name;
+    }
+
+    public Set<RealEstateManager> getManagers() {
+        return Collections.unmodifiableSet(managers);
+    }
+
+    public Set<RealEstateAgent> getAgents() {
+        return Collections.unmodifiableSet(agents);
+    }
+
+    public void addAgent(@NonNull RealEstateAgent agent) {
+        agents.add(agent);
+        agent.setAgency(this);
+    }
+
+    public void removeAgent(@NonNull RealEstateAgent agent) {
+        if (managers.contains(agent)) {
+            throw new IllegalArgumentException("Cannot remove a manager as an agent");
+        }
+        agents.remove(agent);
+        agent.setAgency(null);
+    }
+
+    public void addManager(@NonNull RealEstateManager manager) {
+        addAgent(manager);
+        managers.add(manager);
+    }
+
+    public void removeManager(@NonNull RealEstateManager manager) {
+        managers.remove(manager);
     }
 }
 
