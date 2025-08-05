@@ -15,21 +15,6 @@ public class RealEstateManager extends RealEstateAgent {
         super(loginCredentials, personInfo, agency);
     }
 
-    public static RealEstateManager promoteUser(User user, RealEstateAgency agency) {
-        RealEstateAgent agent = RealEstateAgent.promoteUser(user, agency);
-        return promoteAgent(agent);
-    }
-
-    public static RealEstateManager promoteAgent(RealEstateAgent agent) {
-        RealEstateManager manager = new RealEstateManager();
-        manager.setId(agent.getId());
-        manager.setVersion(agent.getVersion());
-        manager.setCredentials(agent.getCredentials());
-        manager.setInfo(agent.getInfo());
-        manager.setAgency(agent.getAgency());
-        return manager;
-    }
-
     @Override
     public Role getRole() {
         return Role.AGENCY_MANAGER;

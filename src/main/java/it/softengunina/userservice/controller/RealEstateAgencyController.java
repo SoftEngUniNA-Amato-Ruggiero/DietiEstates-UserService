@@ -8,6 +8,7 @@ import it.softengunina.userservice.repository.RealEstateAgencyRepository;
 import it.softengunina.userservice.repository.RealEstateAgentRepository;
 import it.softengunina.userservice.repository.RealEstateManagerRepository;
 import it.softengunina.userservice.repository.UserRepository;
+import it.softengunina.userservice.services.PromotionService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
 import lombok.extern.slf4j.Slf4j;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+import java.util.Set;
 
 import static it.softengunina.userservice.utils.TokenUtils.*;
 
@@ -31,15 +33,17 @@ public class RealEstateAgencyController {
     private final UserRepository<User> userRepository;
     private final RealEstateAgentRepository<RealEstateAgent> agentRepository;
     private final RealEstateManagerRepository managerRepository;
+    private final PromotionService promotionService;
 
     public RealEstateAgencyController(RealEstateAgencyRepository agencyRepository,
                                       UserRepository<User> userRepository,
                                       RealEstateAgentRepository<RealEstateAgent> agentRepository,
-                                      RealEstateManagerRepository managerRepository) {
+                                      RealEstateManagerRepository managerRepository, PromotionService promotionService) {
         this.agencyRepository = agencyRepository;
         this.userRepository = userRepository;
         this.agentRepository = agentRepository;
         this.managerRepository = managerRepository;
+        this.promotionService = promotionService;
     }
 
     @GetMapping
@@ -53,21 +57,9 @@ public class RealEstateAgencyController {
     public RealEstateAgencyPostResponse createAgency(@Valid @RequestBody RealEstateAgencyRequest agencyRequest) {
         RealEstateAgency agency = new RealEstateAgency(agencyRequest.getIban(), agencyRequest.getName());
         RealEstateAgency savedAgency = agencyRepository.save(agency);
-
         User user = getUserFromJwt();
-        log.info("user version: {}", user.getVersion());
-
-//        TODO: "managerRepository.save(manager)" is the proper way to save entities, but it causes the exception:
-//         "org.hibernate.StaleObjectStateException:
-//         Row was updated or deleted by another transaction (or unsaved-value mapping was incorrect)"
-        RealEstateManager manager = RealEstateManager.promoteUser(user, savedAgency);
-        log.info("manager version: {}", manager.getVersion());
-        savedAgency.getAgents().add(manager);
-        savedAgency.getManagers().add(manager);
-        agentRepository.promoteUser(user.getId(), savedAgency.getId());
-        managerRepository.promoteAgent(user.getId());
-
-        return new RealEstateAgencyPostResponse(savedAgency, Role.AGENCY_MANAGER.name());
+        RealEstateManager manager = promotionService.promoteToManager(user, savedAgency);
+        return new RealEstateAgencyPostResponse(savedAgency, manager.getRole().name());
     }
 
     @GetMapping("/{id}")
@@ -109,7 +101,7 @@ public class RealEstateAgencyController {
     }
 
     @GetMapping("/{id}/agents")
-    public List<RealEstateAgent> getAgents(@PathVariable Long id) {
+    public Set<RealEstateAgent> getAgents(@PathVariable Long id) {
         RealEstateAgency agency = agencyRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, NOT_FOUND_MESSAGE + id));
         return agentRepository.findByAgencyId(agency.getId());
@@ -119,12 +111,9 @@ public class RealEstateAgencyController {
     @Transactional
     public RealEstateAgent postAgent(@PathVariable Long id, @NotNull @Valid @RequestBody RealEstateAgentDTO agentDTO) {
         String email = agentDTO.getEmail();
-        log.info("Agency id: {}", id);
-        log.info("Email: {}", email);
 
         RealEstateAgency agency = agencyRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, NOT_FOUND_MESSAGE + id));
-        log.info("Agency found: {}", agency);
 
         RealEstateManager manager = getRealEstateManagerFromJwt();
         if (!manager.getAgency().equals(agency)) {
@@ -134,19 +123,11 @@ public class RealEstateAgencyController {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found with email " + email));
 
-        RealEstateAgent agent = RealEstateAgent.promoteUser(user, agency);
-        agentRepository.promoteUser(user.getId(), id);
-
-//        TODO: "return agentRepository.findById(user.getId())" is the better way to return the agent,
-//         but in a transactional context the agent cannot be found after calling promoteUser
-//        return agentRepository.findById(user.getId())
-//                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Agent not found with id: " + user.getId()));
-
-        return agent;
+        return promotionService.promoteToAgent(user, agency);
     }
 
     @GetMapping("/{id}/managers")
-    public List<RealEstateManager> getManagers(@PathVariable Long id) {
+    public Set<RealEstateManager> getManagers(@PathVariable Long id) {
         RealEstateAgency agency = agencyRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, NOT_FOUND_MESSAGE + id));
         return managerRepository.findByAgencyId(agency.getId());

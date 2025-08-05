@@ -18,7 +18,6 @@ public class RealEstateAgent extends User {
     @NotNull
     @Getter
     @Setter
-    @NonNull
     protected RealEstateAgency agency;
 
     public RealEstateAgent(@NonNull LoginCredentials credentials,
@@ -26,16 +25,6 @@ public class RealEstateAgent extends User {
                            @NonNull RealEstateAgency agency) {
         super(credentials, info);
         this.agency = agency;
-    }
-
-    public static RealEstateAgent promoteUser(User user, RealEstateAgency agency) {
-        RealEstateAgent agent = new RealEstateAgent();
-        agent.setId(user.getId());
-        agent.setVersion(user.getVersion());
-        agent.setCredentials(user.getCredentials());
-        agent.setInfo(user.getInfo());
-        agent.setAgency(agency);
-        return agent;
     }
 
     @Override
