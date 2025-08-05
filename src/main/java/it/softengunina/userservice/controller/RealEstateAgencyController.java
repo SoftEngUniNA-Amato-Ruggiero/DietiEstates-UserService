@@ -9,6 +9,7 @@ import it.softengunina.userservice.repository.RealEstateAgentRepository;
 import it.softengunina.userservice.repository.RealEstateManagerRepository;
 import it.softengunina.userservice.repository.UserRepository;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -116,20 +117,32 @@ public class RealEstateAgencyController {
 
     @PostMapping("/{id}/agents")
     @Transactional
-    public RealEstateAgent addAgent(@PathVariable Long id, @Valid @RequestBody RealEstateAgentDTO agentDto) {
+    public RealEstateAgent postAgent(@PathVariable Long id, @NotNull @Valid @RequestBody RealEstateAgentDTO agentDTO) {
+        String email = agentDTO.getEmail();
+        log.info("Agency id: {}", id);
+        log.info("Email: {}", email);
+
         RealEstateAgency agency = agencyRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, NOT_FOUND_MESSAGE + id));
+        log.info("Agency found: {}", agency);
+
         RealEstateManager manager = getRealEstateManagerFromJwt();
         if (!manager.getAgency().equals(agency)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You do not have permission to add agents to this agency");
         }
 
-        User user = userRepository.findByEmail(agentDto.getEmail())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, NOT_FOUND_MESSAGE + agentDto.getEmail()));
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found with email " + email));
+
+        RealEstateAgent agent = RealEstateAgent.promoteUser(user, agency);
         agentRepository.promoteUser(user.getId(), id);
 
-        return agentRepository.findById(user.getId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Agent not found with id: " + user.getId()));
+//        TODO: "return agentRepository.findById(user.getId())" is the better way to return the agent,
+//         but in a transactional context the agent cannot be found after calling promoteUser
+//        return agentRepository.findById(user.getId())
+//                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Agent not found with id: " + user.getId()));
+
+        return agent;
     }
 
     @GetMapping("/{id}/managers")
