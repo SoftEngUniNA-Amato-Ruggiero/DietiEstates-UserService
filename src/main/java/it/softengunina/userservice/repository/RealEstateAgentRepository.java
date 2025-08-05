@@ -5,7 +5,7 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import java.util.List;
+import java.util.Set;
 
 public interface RealEstateAgentRepository<T extends RealEstateAgent>  extends UserRepository<T> {
     @Modifying
@@ -13,5 +13,5 @@ public interface RealEstateAgentRepository<T extends RealEstateAgent>  extends U
     void promoteUser(@Param("userId") Long userId, @Param("agencyId") Long agencyId);
 
     @Query("SELECT a FROM #{#entityName} a WHERE a.agency.id = :agencyId")
-    List<T> findByAgencyId(Long agencyId);
+    Set<T> findByAgencyId(Long agencyId);
 }
