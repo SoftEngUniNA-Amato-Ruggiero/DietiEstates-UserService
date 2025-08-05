@@ -26,29 +26,38 @@ public class PromotionService {
         this.managerRepository = managerRepository;
     }
 
-    public RealEstateAgent promoteToAgent(User user, RealEstateAgency agency) {
-        userRepository.delete(user);
-        userRepository.flush();
-
+    public RealEstateAgent promoteUserToAgent(User user, RealEstateAgency agency) {
         RealEstateAgent agent = new RealEstateAgent(
                 user.getCredentials(),
                 user.getInfo(),
                 agency
         );
         agency.addAgent(agent);
-        return agentRepository.save(agent);
+
+//        userRepository.delete(user);
+//        userRepository.flush();
+//        return agentRepository.save(agent);
+
+        agentRepository.promoteUserToAgent(user.getId(), agency.getId());
+        agentRepository.flush();
+        return agent;
     }
 
-    public RealEstateManager promoteToManager(User user, RealEstateAgency agency) {
-        userRepository.delete(user);
-        userRepository.flush();
-
+    public RealEstateManager promoteUserToManager(User user, RealEstateAgency agency) {
         RealEstateManager manager = new RealEstateManager(
                 user.getCredentials(),
                 user.getInfo(),
                 agency
         );
         agency.addManager(manager);
-        return managerRepository.save(manager);
+
+//        userRepository.delete(user);
+//        userRepository.flush();
+//        return managerRepository.save(manager);
+
+        managerRepository.promoteUserToAgent(user.getId(), agency.getId());
+        managerRepository.promoteAgentToManager(user.getId());
+        managerRepository.flush();
+        return manager;
     }
 }

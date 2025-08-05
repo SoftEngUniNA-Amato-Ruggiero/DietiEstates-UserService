@@ -8,5 +8,5 @@ import org.springframework.data.repository.query.Param;
 public interface RealEstateManagerRepository extends RealEstateAgentRepository<RealEstateManager> {
     @Modifying
     @Query(value = "INSERT INTO real_estate_managers (id) VALUES (:agentId)", nativeQuery = true)
-    void promoteAgent(@Param("agentId") Long agentId);
+    void promoteAgentToManager(@Param("agentId") Long agentId);
 }

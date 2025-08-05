@@ -58,7 +58,7 @@ public class RealEstateAgencyController {
         RealEstateAgency agency = new RealEstateAgency(agencyRequest.getIban(), agencyRequest.getName());
         RealEstateAgency savedAgency = agencyRepository.save(agency);
         User user = getUserFromJwt();
-        RealEstateManager manager = promotionService.promoteToManager(user, savedAgency);
+        RealEstateManager manager = promotionService.promoteUserToManager(user, savedAgency);
         return new RealEstateAgencyPostResponse(savedAgency, manager.getRole().name());
     }
 
@@ -123,7 +123,7 @@ public class RealEstateAgencyController {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found with email " + email));
 
-        return promotionService.promoteToAgent(user, agency);
+        return promotionService.promoteUserToAgent(user, agency);
     }
 
     @GetMapping("/{id}/managers")
