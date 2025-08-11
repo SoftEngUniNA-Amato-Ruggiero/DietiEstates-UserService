@@ -31,4 +31,9 @@ public class RealEstateAgent extends User {
     public Role getRole() {
         return Role.REAL_ESTATE_AGENT;
     }
+
+    public void quitAgency() {
+        this.agency.removeAgent(this);
+        this.agency = null;
+    }
 }

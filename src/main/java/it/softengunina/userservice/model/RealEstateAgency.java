@@ -41,14 +41,14 @@ public class RealEstateAgency{
     @NonNull
     private String name;
 
-    @OneToMany(mappedBy = "agency")
+    @OneToMany(mappedBy = "agency", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference
     @Setter(AccessLevel.PROTECTED)
     @EqualsAndHashCode.Exclude
     @ToString.Exclude
     private Set<RealEstateManager> managers = new HashSet<>();
 
-    @OneToMany(mappedBy = "agency")
+    @OneToMany(mappedBy = "agency", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference
     @Setter(AccessLevel.PROTECTED)
     @EqualsAndHashCode.Exclude
@@ -69,23 +69,21 @@ public class RealEstateAgency{
         return Collections.unmodifiableSet(agents);
     }
 
-    public void addAgent(@NonNull RealEstateAgent agent) {
+    void addAgent(@NonNull RealEstateAgent agent) {
         agents.add(agent);
         agent.setAgency(this);
     }
 
-    public void removeAgent(@NonNull RealEstateAgent agent) {
-        managers.remove(agent);
-        agents.remove(agent);
-        agent.setAgency(null);
-    }
-
-    public void addManager(@NonNull RealEstateManager manager) {
+    void addManager(@NonNull RealEstateManager manager) {
         addAgent(manager);
         managers.add(manager);
     }
 
-    public void removeManager(@NonNull RealEstateManager manager) {
+    void removeAgent(@NonNull RealEstateAgent agent) {
+        agents.remove(agent);
+    }
+
+    void removeManager(@NonNull RealEstateManager manager) {
         managers.remove(manager);
     }
 }

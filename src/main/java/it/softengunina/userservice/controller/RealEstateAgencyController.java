@@ -38,7 +38,8 @@ public class RealEstateAgencyController {
     public RealEstateAgencyController(RealEstateAgencyRepository agencyRepository,
                                       UserRepository<User> userRepository,
                                       RealEstateAgentRepository<RealEstateAgent> agentRepository,
-                                      RealEstateManagerRepository managerRepository, PromotionService promotionService) {
+                                      RealEstateManagerRepository managerRepository,
+                                      PromotionService promotionService) {
         this.agencyRepository = agencyRepository;
         this.userRepository = userRepository;
         this.agentRepository = agentRepository;
@@ -55,11 +56,10 @@ public class RealEstateAgencyController {
     @PostMapping
     @Transactional
     public RealEstateAgencyPostResponse createAgency(@Valid @RequestBody RealEstateAgencyRequest agencyRequest) {
-        RealEstateAgency agency = new RealEstateAgency(agencyRequest.getIban(), agencyRequest.getName());
-        RealEstateAgency savedAgency = agencyRepository.save(agency);
+        RealEstateAgency agency = agencyRepository.save(new RealEstateAgency(agencyRequest.getIban(), agencyRequest.getName()));
         User user = getUserFromJwt();
-        RealEstateManager manager = promotionService.promoteUserToManager(user, savedAgency);
-        return new RealEstateAgencyPostResponse(savedAgency, manager.getRole().name());
+        RealEstateManager manager = promotionService.promoteUserToManager(user, agency);
+        return new RealEstateAgencyPostResponse(agency, manager.getRole().name());
     }
 
     @GetMapping("/{id}")
@@ -100,6 +100,7 @@ public class RealEstateAgencyController {
         agencyRepository.delete(savedAgency);
     }
 
+
     @GetMapping("/{id}/agents")
     public Set<RealEstateAgent> getAgents(@PathVariable Long id) {
         RealEstateAgency agency = agencyRepository.findById(id)
@@ -107,23 +108,27 @@ public class RealEstateAgencyController {
         return agentRepository.findByAgencyId(agency.getId());
     }
 
+    //TODO: Move to RealEstateAgentController, get the agency from the manager who made the post request
     @PostMapping("/{id}/agents")
     @Transactional
-    public RealEstateAgent postAgent(@PathVariable Long id, @NotNull @Valid @RequestBody RealEstateAgentDTO agentDTO) {
-        String email = agentDTO.getEmail();
-
-        RealEstateAgency agency = agencyRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, NOT_FOUND_MESSAGE + id));
+    public RealEstateAgentDTO postAgent(@PathVariable Long id, @NotNull @Valid @RequestBody RealEstateAgentDTO agentDTO) {
+//        RealEstateAgency agency = agencyRepository.findById(id)
+//                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, NOT_FOUND_MESSAGE + id));
 
         RealEstateManager manager = getRealEstateManagerFromJwt();
-        if (!manager.getAgency().equals(agency)) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You do not have permission to add agents to this agency");
-        }
+//        if (!manager.getAgency().equals(agency)) {
+//            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You do not have permission to add agents to this agency");
+//        }
 
+        RealEstateAgency agency = manager.getAgency();
+
+        String email = agentDTO.getEmail();
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found with email " + email));
 
-        return promotionService.promoteUserToAgent(user, agency);
+        RealEstateAgent agent = manager.addAgent(user);
+        agentRepository.promoteUserToAgent(user.getId(), agency.getId());
+        return new RealEstateAgentDTO(agent.getCredentials().getEmail());
     }
 
     @GetMapping("/{id}/managers")

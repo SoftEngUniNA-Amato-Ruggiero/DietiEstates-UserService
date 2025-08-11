@@ -14,50 +14,16 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @Transactional(propagation = Propagation.REQUIRED, readOnly = false, rollbackFor = Exception.class)
 public class PromotionService {
-    UserRepository<User> userRepository;
-    RealEstateAgentRepository<RealEstateAgent> agentRepository;
     RealEstateManagerRepository managerRepository;
 
-    PromotionService(UserRepository<User> userRepository,
-                     RealEstateAgentRepository<RealEstateAgent> agentRepository,
-                     RealEstateManagerRepository managerRepository) {
-        this.userRepository = userRepository;
-        this.agentRepository = agentRepository;
+    PromotionService(RealEstateManagerRepository managerRepository) {
         this.managerRepository = managerRepository;
     }
 
-    public RealEstateAgent promoteUserToAgent(User user, RealEstateAgency agency) {
-        RealEstateAgent agent = new RealEstateAgent(
-                user.getCredentials(),
-                user.getInfo(),
-                agency
-        );
-        agency.addAgent(agent);
-
-//        userRepository.delete(user);
-//        userRepository.flush();
-//        return agentRepository.save(agent);
-
-        agentRepository.promoteUserToAgent(user.getId(), agency.getId());
-        agentRepository.flush();
-        return agent;
-    }
-
     public RealEstateManager promoteUserToManager(User user, RealEstateAgency agency) {
-        RealEstateManager manager = new RealEstateManager(
-                user.getCredentials(),
-                user.getInfo(),
-                agency
-        );
-        agency.addManager(manager);
-
-//        userRepository.delete(user);
-//        userRepository.flush();
-//        return managerRepository.save(manager);
-
+        RealEstateManager manager = new RealEstateManager(user.getCredentials(), user.getInfo(), agency);
         managerRepository.promoteUserToAgent(user.getId(), agency.getId());
         managerRepository.promoteAgentToManager(user.getId());
-        managerRepository.flush();
         return manager;
     }
 }
